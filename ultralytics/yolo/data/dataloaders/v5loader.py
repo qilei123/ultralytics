@@ -935,7 +935,7 @@ def create_gc_dataloader(path,
         LOGGER.warning('WARNING ⚠️ --rect is incompatible with DataLoader shuffle, setting shuffle=False')
         shuffle = False
     with torch_distributed_zero_first(rank):  # init dataset *.cache only once if DDP
-        dataset = LoadImagesAndLabels(
+        dataset = LoadImagesAndLabels_gc(
             path,
             imgsz,
             batch_size,

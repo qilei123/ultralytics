@@ -151,5 +151,5 @@ weights/
 *_openvino_model/
 *_paddle_model/
 
-*_gc
+*_gc*
 .vscode

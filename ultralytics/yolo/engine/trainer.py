@@ -90,7 +90,7 @@ class BaseTrainer:
         # Dirs
         project = self.args.project or Path(SETTINGS['runs_dir']) / self.args.task
         name = self.args.name or f"{self.args.mode}"
-        if hasattr(self.args, 'save_dir'):
+        if hasattr(self.args, 'save_dir') and self.args.save_dir:
             self.save_dir = Path(self.args.save_dir)
         else:
             self.save_dir = Path(
