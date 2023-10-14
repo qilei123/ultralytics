@@ -1,0 +1,1 @@
+yolo cfg cfg=gc_cfgs/gc_default.yaml data=gc5.0.yaml

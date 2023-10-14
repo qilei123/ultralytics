@@ -5,8 +5,8 @@ task: detect  # inference task, i.e. detect, segment, classify
 mode: train  # YOLO mode, i.e. train, val, predict, export
 
 # Train settings -------------------------------------------------------------------------------------------------------
-model:  # path to model file, i.e. yolov8n.pt, yolov8n.yaml
-data:  # path to data file, i.e. i.e. coco128.yaml
+model: yolov8l.yaml # path to model file, i.e. yolov8n.pt, yolov8n.yaml
+data:  gc5.0.yaml # path to data file, i.e. i.e. coco128.yaml
 epochs: 100  # number of epochs to train for
 patience: 50  # epochs to wait for no observable improvement for early stopping of training
 batch: 16  # number of images per batch (-1 for AutoBatch)
@@ -17,7 +17,7 @@ device:  # device to run on, i.e. cuda device=0 or device=0,1,2,3 or device=cpu
 workers: 8  # number of worker threads for data loading (per RANK if DDP)
 project:  # project name
 name:  # experiment name
-exist_ok: False  # whether to overwrite existing experiment
+exist_ok: True  # whether to overwrite existing experiment
 pretrained: False  # whether to use a pretrained model
 optimizer: SGD  # optimizer to use, choices=['SGD', 'Adam', 'AdamW', 'RMSProp']
 verbose: True  # whether to print verbose output
@@ -99,7 +99,7 @@ perspective: 0.0  # image perspective (+/- fraction), range 0-0.001
 flipud: 0.0  # image flip up-down (probability)
 fliplr: 0.5  # image flip left-right (probability)
 mosaic: 1.0  # image mosaic (probability)
-mixup: 0.0  # image mixup (probability)
+mixup: 0.5  # image mixup (probability)
 copy_paste: 0.0  # segment copy-paste (probability)
 
 # Custom config.yaml ---------------------------------------------------------------------------------------------------
@@ -107,4 +107,5 @@ cfg:  # for overriding defaults.yaml
 
 # Debug, do not modify -------------------------------------------------------------------------------------------------
 v5loader: False  # use legacy YOLOv5 dataloader
-gcloader: False  # use gastro cancer dataloader
+
+gcloader: True  # use gastro cancer dataloader
