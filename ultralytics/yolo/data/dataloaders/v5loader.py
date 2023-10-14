@@ -26,6 +26,7 @@ import torchvision
 from PIL import ExifTags, Image, ImageOps
 from torch.utils.data import DataLoader, Dataset, dataloader, distributed
 from tqdm import tqdm
+import pickle
 
 from ultralytics.yolo.data.utils import check_det_dataset, unzip_file
 from ultralytics.yolo.utils import (DATASETS_DIR, LOGGER, NUM_THREADS, TQDM_BAR_FORMAT, is_colab, is_dir_writeable,
@@ -997,6 +998,9 @@ class LoadImagesAndLabels_gc(LoadImagesAndLabels):
         self.path = path
         self.albumentations = Albumentations(size=img_size) if augment else None
 
+        cache_fptr = open(self.path, "rb")
+        cache_datas = pickle.load(cache_fptr)
+        '''
         try:
             f = []  # image files
             for p in path if isinstance(path, list) else [path]:
@@ -1046,6 +1050,15 @@ class LoadImagesAndLabels_gc(LoadImagesAndLabels):
         self.shapes = np.array(shapes)
         self.im_files = list(cache.keys())  # update
         self.label_files = img2label_paths(cache.keys())  # update
+        '''
+        self.labels = cache_datas['labels']
+        self.segments = cache_datas['segments']
+        self.shapes = cache_datas['shapes']
+        self.im_hw0 = cache_datas['img_hw0']
+        self.im_hw = cache_datas['img_hw']
+        n = len(self.shapes)  # number of images
+        self.im_files = ['None.jpg'] * n
+        self.label_files = ['None.txt'] * n
 
         # Filter images
         if min_items:
@@ -1105,7 +1118,8 @@ class LoadImagesAndLabels_gc(LoadImagesAndLabels):
         # Cache images into RAM/disk for faster training
         if cache_images == 'ram' and not self.check_cache_ram(prefix=prefix):
             cache_images = False
-        self.ims = [None] * n
+        #self.ims = [None] * n
+        self.ims = cache_datas['imgs']
         self.npy_files = [Path(f).with_suffix('.npy') for f in self.im_files]
         if cache_images:
             b, gb = 0, 1 << 30  # bytes of cached images, bytes per gigabytes

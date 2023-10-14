@@ -1,1 +1,1 @@
-yolo cfg cfg=gc_cfgs/gc_default.yaml data=gc5.0.yaml
+yolo train cfg=gc_cfgs/gc_default.yaml data=gc_cfgs/gc5.0.yaml device=0,1,2,3

@@ -203,7 +203,7 @@ def random_perspective(im,
     # Transform label coordinates
     n = len(targets)
     if n:
-        use_segments = any(x.any() for x in segments)
+        use_segments = all(x.any() for x in segments) and len(segments)>0
         new = np.zeros((n, 4))
         if use_segments:  # warp segments
             segments = resample_segments(segments)  # upsample
