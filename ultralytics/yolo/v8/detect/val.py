@@ -8,7 +8,7 @@ import numpy as np
 import torch
 
 from ultralytics.yolo.data import build_dataloader
-from ultralytics.yolo.data.dataloaders.v5loader import create_dataloader
+from ultralytics.yolo.data.dataloaders.v5loader import create_dataloader,create_gc_dataloader
 from ultralytics.yolo.engine.validator import BaseValidator
 from ultralytics.yolo.utils import DEFAULT_CFG, colorstr, ops, yaml_load
 from ultralytics.yolo.utils.checks import check_file, check_requirements
@@ -165,6 +165,21 @@ class DetectionValidator(BaseValidator):
         # TODO: manage splits differently
         # calculate stride - check if model is initialized
         gs = max(int(de_parallel(self.model).stride if self.model else 0), 32)
+
+        if hasattr(self.args,'gcloader') and self.args.gcloader:
+            return create_gc_dataloader(path=dataset_path,
+                                 imgsz=self.args.imgsz,
+                                 batch_size=batch_size,
+                                 stride=gs,
+                                 hyp=vars(self.args),
+                                 cache=False,
+                                 pad=0.5,
+                                 rect=True,
+                                 workers=self.args.workers,
+                                 prefix=colorstr(f'{self.args.mode}: '),
+                                 shuffle=False,
+                                 seed=self.args.seed)[0]        
+
         return create_dataloader(path=dataset_path,
                                  imgsz=self.args.imgsz,
                                  batch_size=batch_size,
@@ -236,7 +251,7 @@ class DetectionValidator(BaseValidator):
 def val(cfg=DEFAULT_CFG, use_python=False):
     model = cfg.model or "yolov8n.pt"
     data = cfg.data or "coco128.yaml"
-
+    print(model)
     args = dict(model=model, data=data)
     if use_python:
         from ultralytics import YOLO
