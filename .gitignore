@@ -152,6 +152,6 @@ weights/
 *_paddle_model/
 
 *_gc*
-.vscode
+
 data_thyroid
 data_thyroid_yl

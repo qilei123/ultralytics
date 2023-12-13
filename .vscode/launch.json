@@ -1,0 +1,30 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "yolo",
+            "type": "python",
+            "request": "launch",
+            "program": "/home/ycao/anaconda3/envs/vitaev2/envs/deeplearning/bin/yolo",
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "args":[ "train", 
+                    "data=gc_cfgs/gc5.1.yaml", 
+                    "model=yolov8l",
+                    "cfg=gc_cfgs/gc_default.yaml",
+                    "save_dir=data_gc/ultralytics_run/train_debug"
+                ]
+        },
+    ]
+}
