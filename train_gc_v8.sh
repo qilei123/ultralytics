@@ -1,1 +1,1 @@
-yolo train cfg=gc_cfgs/gc_default.yaml model=yolov8m.yaml data=gc_cfgs/gc5.1.yaml mixup=0.5 batch=64 save_dir=data_gc/ultralytics_run/v8m_data51_mixup05 device=2,3
+yolo train cfg=gc_cfgs/gc_default.yaml model=yolov8l.yaml data=gc_cfgs/gc5.1.yaml mixup=0.5 optimizer=Adam batch=16 save_dir=data_gc/ultralytics_run/v8l_data51_mixup05_adam device=2,3
