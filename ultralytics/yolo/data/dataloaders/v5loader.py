@@ -674,6 +674,17 @@ class LoadImagesAndLabels(Dataset):
         else:
             # Load image
             img, (h0, w0), (h, w) = self.load_image(index)
+            
+            # labels = self.labels[index].copy()
+            # for label in labels:
+            #     xc = int(label[1]*w)
+            #     yc = int(label[2]*h)
+            #     width = int(label[3]*w)
+            #     height = int(label[4]*h)
+            #     x = int(xc - width/2)
+            #     y = int(yc - height/2)
+            #     img_debug0 = cv2.rectangle(img, (x, y), (x + width, y + height), (0, 255, 0), 2)
+            # cv2.imwrite('debug_folder1/'+str(index).zfill(5)+'_0.jpg', img_debug0)
 
             # Letterbox
             shape = self.batch_shapes[self.batch[index]] if self.rect else self.img_size  # final letterboxed shape
@@ -681,9 +692,27 @@ class LoadImagesAndLabels(Dataset):
             shapes = (h0, w0), ((h / h0, w / w0), pad)  # for COCO mAP rescaling
 
             labels = self.labels[index].copy()
+            
+            # for label in labels:
+            #     xc = int(label[1]*w)
+            #     yc = int(label[2]*h)
+            #     width = int(label[3]*w)
+            #     height = int(label[4]*w)
+            #     x = int(xc - width/2)
+            #     y = int(yc - height/2)
+            #     img_debug1 = cv2.rectangle(img, (x, y), (x + width, y + height), (0, 255, 0), 2)
+            # cv2.imwrite('debug_folder1/'+str(index).zfill(5)+'_1.jpg', img_debug1)
+            
             if labels.size:  # normalized xywh to pixel xyxy format
                 labels[:, 1:] = xywhn2xyxy(labels[:, 1:], ratio[0] * w, ratio[1] * h, padw=pad[0], padh=pad[1])
-
+            # for label in labels:
+            #     x1 = int(label[1])
+            #     y1 = int(label[2])
+            #     x2 = int(label[3])
+            #     y2 = int(label[4])
+            #     img_debug2 = cv2.rectangle(img, (x1, y1), (x2, y2 ), (0, 255, 0), 2)
+            # cv2.imwrite('debug_folder1/'+str(index).zfill(5)+'_2.jpg', img_debug2)
+            
             if self.augment:
                 img, labels = random_perspective(img,
                                                  labels,
@@ -1000,62 +1029,13 @@ class LoadImagesAndLabels_gc(LoadImagesAndLabels):
 
         cache_fptr = open(self.path, "rb")
         cache_datas = pickle.load(cache_fptr)
-        '''
-        try:
-            f = []  # image files
-            for p in path if isinstance(path, list) else [path]:
-                p = Path(p)  # os-agnostic
-                if p.is_dir():  # dir
-                    f += glob.glob(str(p / '**' / '*.*'), recursive=True)
-                    # f = list(p.rglob('*.*'))  # pathlib
-                elif p.is_file():  # file
-                    with open(p) as t:
-                        t = t.read().strip().splitlines()
-                        parent = str(p.parent) + os.sep
-                        f += [x.replace('./', parent, 1) if x.startswith('./') else x for x in t]  # to global path
-                        # f += [p.parent / x.lstrip(os.sep) for x in t]  # to global path (pathlib)
-                else:
-                    raise FileNotFoundError(f'{prefix}{p} does not exist')
-            self.im_files = sorted(x.replace('/', os.sep) for x in f if x.split('.')[-1].lower() in IMG_FORMATS)
-            # self.img_files = sorted([x for x in f if x.suffix[1:].lower() in IMG_FORMATS])  # pathlib
-            assert self.im_files, f'{prefix}No images found'
-        except Exception as e:
-            raise FileNotFoundError(f'{prefix}Error loading data from {path}: {e}\n{HELP_URL}') from e
 
-        # Check cache
-        self.label_files = img2label_paths(self.im_files)  # labels
-        cache_path = (p if p.is_file() else Path(self.label_files[0]).parent).with_suffix('.cache')
-        try:
-            cache, exists = np.load(cache_path, allow_pickle=True).item(), True  # load dict
-            assert cache['version'] == self.cache_version  # matches current version
-            assert cache['hash'] == get_hash(self.label_files + self.im_files)  # identical hash
-        except (FileNotFoundError, AssertionError, AttributeError):
-            cache, exists = self.cache_labels(cache_path, prefix), False  # run cache ops
-
-        # Display cache
-        nf, nm, ne, nc, n = cache.pop('results')  # found, missing, empty, corrupt, total
-        if exists and LOCAL_RANK in {-1, 0}:
-            d = f"Scanning {cache_path}... {nf} images, {nm + ne} backgrounds, {nc} corrupt"
-            tqdm(None, desc=prefix + d, total=n, initial=n, bar_format=TQDM_BAR_FORMAT)  # display cache results
-            if cache['msgs']:
-                LOGGER.info('\n'.join(cache['msgs']))  # display warnings
-        assert nf > 0 or not augment, f'{prefix}No labels found in {cache_path}, can not start training. {HELP_URL}'
-
-        # Read cache
-        [cache.pop(k) for k in ('hash', 'version', 'msgs')]  # remove items
-        labels, shapes, self.segments = zip(*cache.values())
-        nl = len(np.concatenate(labels, 0))  # number of labels
-        assert nl > 0 or not augment, f'{prefix}All labels empty in {cache_path}, can not start training. {HELP_URL}'
-        self.labels = list(labels)
-        self.shapes = np.array(shapes)
-        self.im_files = list(cache.keys())  # update
-        self.label_files = img2label_paths(cache.keys())  # update
-        '''
         self.labels = cache_datas['labels']
         self.segments = cache_datas['segments']
         self.shapes = cache_datas['shapes']
         self.im_hw0 = cache_datas['img_hw0']
         self.im_hw = cache_datas['img_hw']
+        self.ims = cache_datas['imgs']
         n = len(self.shapes)  # number of images
         self.im_files = ['None.jpg'] * n
         self.label_files = ['None.txt'] * n
@@ -1068,6 +1048,7 @@ class LoadImagesAndLabels_gc(LoadImagesAndLabels):
             self.label_files = [self.label_files[i] for i in include]
             self.labels = [self.labels[i] for i in include]
             self.segments = [self.segments[i] for i in include]
+            self.imgs = [self.ims[i] for i in include]
             self.shapes = self.shapes[include]  # wh
 
         # Create indices
@@ -1095,11 +1076,12 @@ class LoadImagesAndLabels_gc(LoadImagesAndLabels):
             # Sort by aspect ratio
             s = self.shapes  # wh
             ar = s[:, 1] / s[:, 0]  # aspect ratio
-            irect = ar.argsort()
+            irect = range(len(s))#ar.argsort()  #debugging
             self.im_files = [self.im_files[i] for i in irect]
             self.label_files = [self.label_files[i] for i in irect]
             self.labels = [self.labels[i] for i in irect]
             self.segments = [self.segments[i] for i in irect]
+            self.imgs = [self.ims[i] for i in irect]
             self.shapes = s[irect]  # wh
             ar = ar[irect]
 
@@ -1119,7 +1101,7 @@ class LoadImagesAndLabels_gc(LoadImagesAndLabels):
         if cache_images == 'ram' and not self.check_cache_ram(prefix=prefix):
             cache_images = False
         #self.ims = [None] * n
-        self.ims = cache_datas['imgs']
+        #self.ims = cache_datas['imgs']
         self.npy_files = [Path(f).with_suffix('.npy') for f in self.im_files]
         if cache_images:
             b, gb = 0, 1 << 30  # bytes of cached images, bytes per gigabytes
