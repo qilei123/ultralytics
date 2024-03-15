@@ -1036,6 +1036,63 @@ class LoadImagesAndLabels_gc(LoadImagesAndLabels):
         self.im_hw0 = cache_datas['img_hw0']
         self.im_hw = cache_datas['img_hw']
         self.ims = cache_datas['imgs']
+
+        ##############这里的实验用于将其他干扰图片用做空图片载入进行模型训练和测试##############
+        #0:real_cancer,1:other,2:nip,3:pesudo_cancer
+        pseudo_empty_options = {'gc':[0],'gc_pseudo':[0,3],'gc_empty':[0,1,2],'gc_pseudo_empty':[0,1,2,3]}
+        if self.hyp['pseudo_empty'] in pseudo_empty_options:
+            selected_cats=pseudo_empty_options[self.hyp['pseudo_empty']]
+
+            def filter_cats(selected_cats=[0]):
+                filted_labels = []
+                filted_segments = []
+                filted_shapes = []
+                filted_im_hw0 = []
+                filted_im_hw = []
+                filted_ims = []
+                for index_id,_labels in enumerate(self.labels):
+                    temp_labels=[]
+                    temp_segments =[]
+                    empty_labels = []
+                    for label,segment in zip(_labels.tolist(),self.segments[index_id]):
+                        if (label[0] in selected_cats) and (label[0] in [0,3]):
+                            label[0]=0
+                            temp_labels.append(label)
+                            temp_segments.append(segment)
+                        else:
+                            empty_labels.append(label[0])
+                    if len(temp_labels)>0:
+                        filted_labels.append(np.array(temp_labels))
+                        filted_segments.append(temp_segments)
+                        filted_shapes.append(self.shapes[index_id])
+                        filted_im_hw0.append(self.im_hw0[index_id])
+                        filted_im_hw.append(self.im_hw[index_id])
+                        filted_ims.append(self.ims[index_id])
+                    else:
+                        empty_usable = False
+                        for empty_label in empty_labels:
+                            if empty_label in selected_cats:
+                                empty_usable = True
+                                break
+                        if empty_usable:
+                            #filted_labels.append(np.array(temp_labels))
+                            filted_labels.append(np.empty([0,5]))
+                            filted_segments.append([np.empty([0,2])])
+                            filted_shapes.append(self.shapes[index_id])
+                            filted_im_hw0.append(self.im_hw0[index_id])
+                            filted_im_hw.append(self.im_hw[index_id])
+                            filted_ims.append(self.ims[index_id])
+
+                self.labels = filted_labels
+                self.segments = filted_segments
+                self.shapes = filted_shapes
+                self.im_hw0 = filted_im_hw0
+                self.im_hw = filted_im_hw
+                self.ims = filted_ims
+
+            if ('train' in self.path) and len(selected_cats)>0:
+                filter_cats(selected_cats)
+
         n = len(self.shapes)  # number of images
         self.im_files = ['None.jpg'] * n
         self.label_files = ['None.txt'] * n

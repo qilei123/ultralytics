@@ -1,7 +1,8 @@
 from ultralytics import YOLO #pip install ultralytics
 import cv2,glob
 from geo2d.geometry import Polygon #pip install git+https://github.com/qilei123/Geo2D
-
+import pickle
+import numpy as np
 class ThyroidSegPredictor():
     def __init__(self,model_dir,
                  conf = 0.25,
@@ -104,8 +105,68 @@ def process_eval_videos():
     gc_model = YOLO(gc_model_dir)
     gc_model.to(0)
     print(gc_model.predict(test_img_dir,verbose = False))
-   
+
+def parse_gc_dataset():
+    gc_data_path = 'data_gc/train_5.2.cache'
+    cache_fptr = open(gc_data_path, "rb")
+    cache_datas = pickle.load(cache_fptr)
+
+    labels = cache_datas['labels']
+    segments = cache_datas['segments']
+    shapes = cache_datas['shapes']
+    im_hw0 = cache_datas['img_hw0']
+    im_hw = cache_datas['img_hw']
+    ims = cache_datas['imgs']
+
+    print(len(ims))
+    prefix = 'gc_pseudo_empty'
+    selected_options = {'gc':[0],'gc_pseudo':[0,3],'gc_empty':[0,1,2],'gc_pseudo_empty':[0,1,2,3]}
+    selected_cats = selected_options[prefix]
+
+    filted_labels = []
+    filted_segments = []
+    filted_shapes = []
+    filted_im_hw0 = []
+    filted_im_hw = []
+    filted_ims = []
+
+    for index_id, _labels in enumerate(labels):
+        temp_labels=[]
+        temp_segments=[]
+        _labels = _labels.tolist()
+        empty_cats = []
+        for label_index,label in enumerate(_labels):
+            if (label[0] in selected_cats) and (label[0] in [0,3]):
+                temp_labels.append(label)
+                temp_segments.append(segments[index_id][label_index])
+            else:
+                empty_cats.append(label[0])
+        if len(temp_labels)>0:
+            filted_segments.append(temp_segments)
+            filted_labels.append(np.array(temp_labels))
+            filted_shapes.append(shapes[index_id])
+            filted_im_hw0.append(im_hw0[index_id])
+            filted_im_hw.append(im_hw[index_id])
+            filted_ims.append(ims[index_id])
+        
+        if len(temp_labels)==0:
+            usable = False
+            for cat in empty_cats:
+                if cat in selected_cats:
+                    usable = True
+                    break
+            if usable:
+                filted_segments.append([np.empty([0,2])])
+                filted_labels.append(np.array(temp_labels))
+                filted_shapes.append(shapes[index_id])
+                filted_im_hw0.append(im_hw0[index_id])
+                filted_im_hw.append(im_hw[index_id])
+                filted_ims.append(ims[index_id])
+
+    print(len(filted_ims))
+
 if __name__=='__main__':
     #testTSP()
-    process_eval_videos()
+    #process_eval_videos()
+    parse_gc_dataset()
     
