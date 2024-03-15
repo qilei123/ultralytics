@@ -483,8 +483,13 @@ class Metric:
 
     def fitness(self):
         # Model fitness as a weighted combination of metrics
-        w = [0.0, 0.0, 0.1, 0.9]  # weights for [P, R, mAP@0.5, mAP@0.5:0.95]
-        return (np.array(self.mean_results()) * w).sum()
+        #w = [0.0, 0.0, 0.1, 0.9]  # weights for [P, R, mAP@0.5, mAP@0.5:0.95]
+        #return (np.array(self.mean_results()) * w).sum()
+        R,P,mAP05,mAP05095 = self.mean_results()
+        if R+P == 0:
+            return 0.0
+        else:
+            return (2*R*P)/(R+P)
 
     def update(self, results):
         """
